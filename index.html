@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="it" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetriClean Pro - Gestione Pulizia Vetrate</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col text-slate-800 antialiased bg-slate-100">
+
+    <!-- TOP NAVIGATION HEADER -->
+    <header class="bg-gradient-to-r from-sky-800 via-sky-900 to-indigo-950 text-white sticky top-0 z-30 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center text-sky-300 font-bold text-xl shadow-inner">
+                        <i class="fa-solid fa-spray-can-sparkles"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight tracking-wide">VetriClean <span class="text-sky-300 font-normal">Pro</span></h1>
+                        <p class="text-[11px] text-sky-200">Gestionale Pulizia Vetrate</p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center space-x-2">
+                    <div id="cloudStatusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium bg-white/10 border border-white/20 text-sky-100 shadow-inner">
+                        <span id="cloudDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span id="cloudStatusText" class="hidden sm:inline">Connessione Cloud...</span>
+                    </div>
+
+                    <button onclick="openQuickDailyModal()" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-medium text-xs sm:text-sm px-3.5 py-2 rounded-xl shadow-lg transition flex items-center gap-2" title="Registrazione Rapida Interventi e Incassi">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span class="hidden sm:inline">Registra Giornata</span>
+                    </button>
+
+                    <button onclick="openAddModal()" class="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-medium text-xs sm:text-sm px-3.5 py-2 rounded-xl shadow-lg transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span class="hidden sm:inline">Nuovo Cliente</span>
+                    </button>
+
+                    <button onclick="exportData()" title="Esporta Backup CSV" class="bg-white/10 hover:bg-white/20 text-white p-2 rounded-xl transition">
+                        <i class="fa-solid fa-file-export"></i>
+                    </button>
+
+                    <button onclick="askResetConfirmation()" title="Ripristina Dati Iniziali" class="bg-white/10 hover:bg-rose-500/80 text-white p-2 rounded-xl transition">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- KPI STATS SUMMARY DASHBOARD -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase">
+                    <span>Valore Totale</span>
+                    <i class="fa-solid fa-wallet text-sky-500 text-sm"></i>
+                </div>
+                <div class="mt-2">
+                    <div id="kpi-total-price" class="text-xl sm:text-2xl font-extrabold text-slate-900">€ 0</div>
+                    <div id="kpi-total-clients" class="text-xs text-slate-500 mt-0.5">0 clienti</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 border border-amber-200 bg-amber-50/30 shadow-sm flex flex-col justify-between">
+                <div class="flex items-center justify-between text-amber-700 text-xs font-semibold uppercase">
+                    <span>Da Incassare</span>
+                    <i class="fa-solid fa-clock text-amber-500 text-sm"></i>
+                </div>
+                <div class="mt-2">
+                    <div id="kpi-pending-amount" class="text-xl sm:text-2xl font-extrabold text-amber-800">€ 0</div>
+                    <div id="kpi-pending-count" class="text-xs text-amber-600 font-medium mt-0.5">0 da incassare</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 border border-emerald-200 bg-emerald-50/30 shadow-sm flex flex-col justify-between">
+                <div class="flex items-center justify-between text-emerald-700 text-xs font-semibold uppercase">
+                    <span>Incassati</span>
+                    <i class="fa-solid fa-circle-check text-emerald-500 text-sm"></i>
+                </div>
+                <div class="mt-2">
+                    <div id="kpi-paid-amount" class="text-xl sm:text-2xl font-extrabold text-emerald-800">€ 0</div>
+                    <div id="kpi-paid-count" class="text-xs text-emerald-600 font-medium mt-0.5">0 saldati</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 border border-indigo-200 bg-indigo-50/30 shadow-sm flex flex-col justify-between">
+                <div class="flex items-center justify-between text-indigo-700 text-xs font-semibold uppercase">
+                    <span>Attesa 2ª Prestaz.</span>
+                    <i class="fa-solid fa-hourglass-half text-indigo-500 text-sm"></i>
+                </div>
+                <div class="mt-2">
+                    <div id="kpi-waiting-count" class="text-xl sm:text-2xl font-extrabold text-indigo-900">0</div>
+                    <div class="text-xs text-indigo-600 font-medium mt-0.5">In attesa del 2° giro</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEARCH BAR & FILTER PILLS -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row gap-3 items-center justify-between">
+                <!-- Search Input -->
+                <div class="relative w-full sm:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Cerca negozio o note..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition">
+                </div>
+
+                <!-- Sort Dropdown -->
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <label for="sortBy" class="text-xs font-semibold text-slate-500 uppercase whitespace-nowrap">Ordina:</label>
+                    <select id="sortBy" onchange="renderClients()" class="w-full sm:w-auto bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <option value="name">Nome (A-Z)</option>
+                        <option value="status">Stato (Da pagare prima)</option>
+                        <option value="priceDesc">Prezzo (Più alto)</option>
+                        <option value="priceAsc">Prezzo (Più basso)</option>
+                        <option value="dateDesc">Data Ultimo Servizio</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Filter Pills -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                <button id="filter-ALL" onclick="setFilter('ALL')" class="filter-btn active px-3.5 py-1.5 rounded-xl font-medium transition whitespace-nowrap bg-sky-600 text-white shadow-sm">
+                    Tutti (<span id="cnt-ALL">0</span>)
+                </button>
+                <button id="filter-DA_PAGARE" onclick="setFilter('DA_PAGARE')" class="filter-btn px-3.5 py-1.5 rounded-xl font-medium transition whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    ⚠️ Da Incassare (<span id="cnt-DA_PAGARE">0</span>)
+                </button>
+                <button id="filter-ATTESA_2A" onclick="setFilter('ATTESA_2A')" class="filter-btn px-3.5 py-1.5 rounded-xl font-medium transition whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    ⏳ Attesa 2ª (<span id="cnt-ATTESA_2A">0</span>)
+                </button>
+                <button id="filter-PAGATO" onclick="setFilter('PAGATO')" class="filter-btn px-3.5 py-1.5 rounded-xl font-medium transition whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    ✅ Saldati (<span id="cnt-PAGATO">0</span>)
+                </button>
+                <button id="filter-OGNI_2" onclick="setFilter('OGNI_2')" class="filter-btn px-3.5 py-1.5 rounded-xl font-medium transition whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    Ogni 2 Prestaz. (<span id="cnt-OGNI_2">0</span>)
+                </button>
+                <button id="filter-OGNI_4" onclick="setFilter('OGNI_4')" class="filter-btn px-3.5 py-1.5 rounded-xl font-medium transition whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    Mensili / Ogni 4 Sett. (<span id="cnt-OGNI_4">0</span>)
+                </button>
+            </div>
+        </div>
+
+        <!-- CLIENT CARDS GRID -->
+        <div id="clientCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <!-- Cards rendered dynamically -->
+        </div>
+
+        <!-- EMPTY STATE -->
+        <div id="emptyState" class="hidden text-center py-16 bg-white rounded-2xl border border-slate-200">
+            <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                <i class="fa-solid fa-store-slash"></i>
+            </div>
+            <h3 class="font-bold text-slate-700 text-base">Nessun cliente trovato</h3>
+            <p class="text-xs text-slate-400 mt-1">Prova a cambiare filtro o termine di ricerca.</p>
+        </div>
+
+    </main>
+
+    <!-- QUICK DAILY REGISTRATION MODAL -->
+    <div id="quickDailyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl transform transition-all scale-95 max-h-[90vh] flex flex-col" id="quickModalContainer">
+            <div class="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-4 flex justify-between items-center flex-shrink-0">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-bolt text-yellow-200"></i> Registrazione Rapida Giornata
+                </h3>
+                <button onclick="closeQuickDailyModal()" class="text-white/80 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Tab selector inside modal -->
+            <div class="bg-slate-100 p-2 flex gap-2 border-b border-slate-200 flex-shrink-0">
+                <button id="quickTabSingleBtn" onclick="switchQuickTab('single')" class="flex-1 py-2 text-xs font-bold rounded-xl bg-white text-slate-800 shadow-sm transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-store"></i> Negozio Singolo
+                </button>
+                <button id="quickTabBatchBtn" onclick="switchQuickTab('batch')" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-800 transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-list-check"></i> Spunta Massiva Negozi
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-1 space-y-4">
+                
+                <!-- SINGLE ENTRY TAB -->
+                <form id="quickSingleForm" onsubmit="saveQuickDaily(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Seleziona Negozio / Cliente *</label>
+                        <select id="quickClientSelect" onchange="onQuickClientChange()" required class="w-full px-3 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none bg-slate-50">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <label class="flex items-center space-x-3 cursor-pointer p-2 rounded-lg bg-white border border-slate-200 hover:border-amber-400 transition">
+                            <input type="checkbox" id="quickWorkDone" checked class="w-4 h-4 text-amber-600 rounded focus:ring-amber-500">
+                            <span class="text-xs font-bold text-slate-700 flex items-center gap-1">
+                                <i class="fa-solid fa-spray-can text-sky-500"></i> Pulizia / Lavaggio Eseguito Oggi
+                            </span>
+                        </label>
+
+                        <label class="flex items-center space-x-3 cursor-pointer p-2 rounded-lg bg-white border border-slate-200 hover:border-emerald-400 transition">
+                            <input type="checkbox" id="quickPaid" checked class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                            <span class="text-xs font-bold text-slate-700 flex items-center gap-1">
+                                <i class="fa-solid fa-hand-holding-dollar text-emerald-500"></i> Pagamento Incassato Oggi
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Prezzo / Importo (€)</label>
+                            <input type="number" id="quickPrice" step="5" min="0" placeholder="0" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Data Registrazione</label>
+                            <input type="date" id="quickDate" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Note Opzionali</label>
+                        <input type="text" id="quickNotes" placeholder="Es. Pagato in contanti, ripassare per secondo vetro..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+
+                    <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                        <button type="button" onclick="closeQuickDailyModal()" class="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-200">Annulla</button>
+                        <button type="submit" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl shadow-md transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-check"></i> Salva Registrazione
+                        </button>
+                    </div>
+                </form>
+
+                <!-- BATCH SPUNTA MASSIVA TAB -->
+                <div id="quickBatchSection" class="hidden space-y-3">
+                    <p class="text-xs text-slate-500">Metti la spunta a tutti i negozi che hai pulito o che ti hanno pagato oggi, poi premi "Applica":</p>
+                    
+                    <div id="batchClientsList" class="max-h-[50vh] overflow-y-auto space-y-2 pr-1">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                        <button type="button" onclick="closeQuickDailyModal()" class="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-200">Annulla</button>
+                        <button type="button" onclick="applyBatchQuickDaily()" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl shadow-md transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-layer-group"></i> Applica Registrazioni Selezionate
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD / EDIT CLIENT MODAL -->
+    <div id="clientModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl transform transition-all scale-95" id="modalContainer">
+            <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center">
+                <h3 id="modalTitle" class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-shop text-sky-400"></i> Scheda Cliente
+                </h3>
+                <button onclick="closeClientModal()" class="text-slate-400 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="clientForm" onsubmit="saveClient(event)" class="p-6 space-y-4">
+                <input type="hidden" id="clientId">
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nome Negozio / Cliente *</label>
+                    <input type="text" id="clientName" required placeholder="Es. Bar Centrale" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Prezzo (€) *</label>
+                        <input type="number" id="clientPrice" step="5" min="0" required placeholder="40" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Stato Attuale</label>
+                        <select id="clientStatus" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                            <option value="PAGATO">PAGATO (Regolare)</option>
+                            <option value="DA_PAGARE">DA PAGARE (In Sospeso)</option>
+                            <option value="ATTESA_2A">1ª Fatta - Attesa 2ª</option>
+                            <option value="IN_RITARDO">IN RITARDO</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Frequenza Pagamento / Servizio</label>
+                    <select id="clientFrequency" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                        <option value="Ogni 2 prestazioni">Ogni 2 prestazioni</option>
+                        <option value="Ogni 4 settimane">Ogni 4 settimane</option>
+                        <option value="Mensile - Primo Lunedì">Mensile - Primo Lunedì</option>
+                        <option value="Mensile - Primo Martedì">Mensile - Primo Martedì</option>
+                        <option value="Mensile - Ultimo Martedì">Mensile - Ultimo Martedì</option>
+                        <option value="Mensile - Ultimo Venerdì">Mensile - Ultimo Venerdì</option>
+                        <option value="Mensile - Ultimo del mese">Mensile - Ultimo del mese</option>
+                        <option value="Ogni prestazione">Ogni prestazione</option>
+                        <option value="Saltuario">Saltuario</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Ultima Prestazione</label>
+                        <input type="date" id="clientLastService" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Ultimo Pagamento</label>
+                        <input type="date" id="clientLastPayment" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Note Personali / Scadenze</label>
+                    <textarea id="clientNotes" rows="2" placeholder="Es. Deve pagare il 18, Passare il pomeriggio..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"></textarea>
+                </div>
+
+                <div class="pt-3 flex justify-between items-center border-t border-slate-100">
+                    <button type="button" id="deleteClientBtn" onclick="askDeleteConfirmation()" class="text-rose-600 hover:text-rose-700 text-xs font-semibold flex items-center gap-1">
+                        <i class="fa-solid fa-trash"></i> Elimina Cliente
+                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeClientModal()" class="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-200">Annulla</button>
+                        <button type="submit" class="px-5 py-2 bg-sky-600 text-white text-sm font-semibold rounded-xl hover:bg-sky-700 shadow-md">Salva</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CUSTOM CONFIRMATION MODAL -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl transform transition-all scale-95" id="confirmModalContainer">
+            <div id="confirmModalIcon" class="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 id="confirmModalTitle" class="font-bold text-slate-900 text-base mb-1">Sei sicuro?</h3>
+            <p id="confirmModalText" class="text-xs text-slate-500 mb-5">Questa operazione modificherà i dati salvati.</p>
+            <div class="flex gap-2 justify-center">
+                <button type="button" onclick="closeConfirmModal()" class="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl hover:bg-slate-200 transition flex-1">Annulla</button>
+                <button type="button" id="confirmModalActionBtn" class="px-4 py-2 bg-rose-600 text-white text-xs font-semibold rounded-xl hover:bg-rose-700 transition flex-1">Conferma</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION BANNER -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <span id="toastIcon" class="text-emerald-400 text-lg"><i class="fa-solid fa-circle-check"></i></span>
+        <span id="toastMessage" class="text-sm font-medium">Operazione completata!</span>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by system
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'vetriclean-pro-app';
+        let db = null;
+        let auth = null;
+        let isCloudActive = false;
+
+        // INITIAL NUMBERS DATA
+        const INITIAL_NUMBERS_DATA = [
+            { id: 1, name: 'Bebe', price: 200, frequency: 'Mensile - Primo Lunedì', lastService: '2026-10-05', lastPayment: '2026-10-05', status: 'PAGATO', notes: '' },
+            { id: 2, name: 'Meka Arredamenti', price: 50, frequency: 'Mensile - Primo Lunedì', lastService: '2026-10-05', lastPayment: '2026-06-29', status: 'DA_PAGARE', notes: '' },
+            { id: 3, name: 'Cirdec', price: 65, frequency: 'Mensile - Primo Lunedì', lastService: '2026-10-05', lastPayment: '2026-10-05', status: 'PAGATO', notes: '' },
+            { id: 4, name: 'Profumeria', price: 40, frequency: 'Ogni 2 prestazioni', lastService: '2026-09-28', lastPayment: '2026-09-14', status: 'PAGATO', notes: '' },
+            { id: 5, name: 'Balestrieri', price: 50, frequency: 'Mensile - Primo Martedì', lastService: '2026-03-16', lastPayment: '2026-09-02', status: 'PAGATO', notes: '' },
+            { id: 6, name: 'De Robbio', price: 60, frequency: 'Mensile - Ultimo Martedì', lastService: '2026-03-18', lastPayment: '2026-09-08', status: 'PAGATO', notes: '' },
+            { id: 7, name: 'De Rosa', price: 50, frequency: 'Ogni 2 prestazioni', lastService: '2026-09-29', lastPayment: '2026-09-15', status: 'PAGATO', notes: '' },
+            { id: 8, name: '0.0', price: 80, frequency: 'Ogni 4 settimane', lastService: '2026-03-18', lastPayment: '2026-09-08', status: 'PAGATO', notes: '' },
+            { id: 9, name: 'Pocho', price: 40, frequency: 'Ogni 2 prestazioni', lastService: '2026-09-16', lastPayment: '2026-09-04', status: 'PAGATO', notes: '' },
+            { id: 10, name: 'Esposito', price: 40, frequency: 'Ogni 2 prestazioni', lastService: '2026-09-30', lastPayment: '2026-09-16', status: 'PAGATO', notes: '' },
+            { id: 11, name: 'Lorenzino', price: 35, frequency: 'Ogni 2 prestazioni', lastService: '2026-09-30', lastPayment: '2026-09-09', status: 'PAGATO', notes: '' },
+            { id: 12, name: 'Bar', price: 30, frequency: 'Ogni 2 prestazioni', lastService: '2026-07-22', lastPayment: '2026-07-22', status: 'PAGATO', notes: '' },
+            { id: 13, name: 'Meccanico Gianfranco', price: 50, frequency: 'Ogni 2 prestazioni', lastService: '2026-09-25', lastPayment: '2026-09-04', status: 'PAGATO', notes: '' },
+            { id: 14, name: 'Farmacia', price: 30, frequency: 'Ogni 2 prestazioni', lastService: '2026-10-02', lastPayment: '', status: 'DA_PAGARE', notes: '' },
+            { id: 15, name: 'Negozio Telefoni', price: 20, frequency: 'Saltuario', lastService: '2026-09-02', lastPayment: '2026-09-02', status: 'PAGATO', notes: '' },
+            { id: 16, name: 'Palestra', price: 50, frequency: 'Saltuario', lastService: '2026-03-11', lastPayment: '', status: 'IN_RITARDO', notes: 'In ritardo' },
+            { id: 17, name: 'Il Gatto e la Volpe', price: 30, frequency: 'Ogni 2 prestazioni', lastService: '2026-09-25', lastPayment: '2026-09-25', status: 'PAGATO', notes: '' },
+            { id: 18, name: 'Pasticceria Sant\'antimo', price: 60, frequency: 'Ogni 4 settimane', lastService: '2026-09-25', lastPayment: '2026-09-25', status: 'PAGATO', notes: '' },
+            { id: 19, name: 'Gioielleria', price: 40, frequency: 'Ogni 4 settimane', lastService: '2026-09-25', lastPayment: '2026-09-25', status: 'PAGATO', notes: '' },
+            { id: 20, name: 'Ernonno boutique', price: 80, frequency: 'Ogni 4 settimane', lastService: '2026-09-25', lastPayment: '2026-09-25', status: 'PAGATO', notes: '' },
+            { id: 21, name: 'Atelier', price: 80, frequency: 'Mensile - Ultimo Venerdì', lastService: '2026-09-25', lastPayment: '2026-09-25', status: 'PAGATO', notes: '' },
+            { id: 22, name: 'Livein', price: 80, frequency: 'Ogni 2 prestazioni', lastService: '2026-09-21', lastPayment: '2026-09-25', status: 'PAGATO', notes: '' },
+            { id: 23, name: 'Officina', price: 80, frequency: 'Ogni 4 settimane', lastService: '2026-09-25', lastPayment: '2026-09-25', status: 'PAGATO', notes: '' },
+            { id: 24, name: 'Arketipo', price: 25, frequency: 'Ogni 2 prestazioni', lastService: '2026-05-06', lastPayment: '2026-05-06', status: 'PAGATO', notes: '' },
+            { id: 25, name: 'Mon Amour', price: 60, frequency: 'Ogni 4 settimane', lastService: '2026-09-16', lastPayment: '2026-09-16', status: 'PAGATO', notes: '' },
+            { id: 26, name: 'Vitmar', price: 25, frequency: 'Ogni 2 prestazioni', lastService: '2026-10-01', lastPayment: '2026-09-16', status: 'ATTESA_2A', notes: '' },
+            { id: 27, name: 'De Robbio 2', price: 50, frequency: 'Mensile - Ultimo del mese', lastService: '2026-05-28', lastPayment: '2026-09-10', status: 'PAGATO', notes: '' },
+            { id: 28, name: 'Nails', price: 40, frequency: 'Ogni 4 settimane', lastService: '2026-07-23', lastPayment: '2026-09-16', status: 'DA_PAGARE', notes: 'Da pagare il 18' },
+            { id: 29, name: 'Moto', price: 35, frequency: 'Ogni 4 settimane', lastService: '2026-08-27', lastPayment: '2026-09-25', status: 'PAGATO', notes: 'Pagato con una settimana di ritardo' },
+            { id: 30, name: 'Ottica', price: 35, frequency: 'Ogni 4 settimane', lastService: '2026-06-26', lastPayment: '2026-10-01', status: 'DA_PAGARE', notes: 'Deve pagare il 18' },
+            { id: 31, name: 'Saronni', price: 100, frequency: 'Ogni 4 settimane', lastService: '2026-08-27', lastPayment: '2026-09-10', status: 'PAGATO', notes: '' },
+            { id: 32, name: 'Outlet', price: 30, frequency: 'Ogni 4 settimane', lastService: '2026-06-26', lastPayment: '2026-09-25', status: 'PAGATO', notes: '' },
+            { id: 33, name: 'Gemelli', price: 15, frequency: 'Ogni prestazione', lastService: '2026-07-29', lastPayment: '2026-07-29', status: 'PAGATO', notes: '' },
+            { id: 34, name: 'Pasticceria piccola', price: 50, frequency: 'Ogni 4 settimane', lastService: '2026-08-27', lastPayment: '2026-09-24', status: 'DA_PAGARE', notes: 'Da pagare il 4' },
+            { id: 35, name: 'Pasticceria Grande', price: 60, frequency: 'Ogni 2 prestazioni', lastService: '2026-08-13', lastPayment: '2026-08-13', status: 'PAGATO', notes: '' },
+            { id: 36, name: 'Sapureat', price: 80, frequency: 'Ogni 4 settimane', lastService: '2026-07-09', lastPayment: '2026-09-03', status: 'DA_PAGARE', notes: 'Da pagare il 4' },
+            { id: 37, name: 'Malcom', price: 30, frequency: 'Ogni 2 prestazioni', lastService: '2026-09-25', lastPayment: '2026-09-25', status: 'DA_PAGARE', notes: 'Sono ripassato il 30 e deve pagare' },
+            { id: 38, name: 'Fioraio', price: 20, frequency: 'Ogni 2 prestazioni', lastService: '2026-10-01', lastPayment: '2026-09-17', status: 'ATTESA_2A', notes: '' },
+            { id: 39, name: 'Fimiani Motors', price: 40, frequency: 'Ogni 2 prestazioni', lastService: '2026-09-22', lastPayment: '2026-09-22', status: 'PAGATO', notes: '' },
+            { id: 40, name: 'Palazzo signora', price: 10, frequency: 'Ogni prestazione', lastService: '', lastPayment: '', status: 'PAGATO', notes: '' }
+        ];
+
+        let clients = [];
+        let activeFilter = 'ALL';
+        let pendingConfirmAction = null;
+        let fileHandle = null;
+
+        function getTodayISO() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function showToast(message, type = 'emerald') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+
+            msg.innerHTML = message;
+
+            if (type === 'emerald') {
+                icon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
+            } else if (type === 'amber') {
+                icon.innerHTML = '<i class="fa-solid fa-bell text-amber-400"></i>';
+            } else if (type === 'rose') {
+                icon.innerHTML = '<i class="fa-solid fa-circle-exclamation text-rose-400"></i>';
+            } else {
+                icon.innerHTML = '<i class="fa-solid fa-info-circle text-sky-400"></i>';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3500);
+        }
+
+        function renderClients() {
+            const grid = document.getElementById('clientCardsGrid');
+            const emptyState = document.getElementById('emptyState');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
+            const sortBy = document.getElementById('sortBy').value;
+
+            updateFilterCounts();
+
+            let filtered = clients.filter(c => {
+                const matchesSearch = c.name.toLowerCase().includes(searchVal) || (c.notes && c.notes.toLowerCase().includes(searchVal));
+                if (!matchesSearch) return false;
+
+                if (activeFilter === 'DA_PAGARE') return c.status === 'DA_PAGARE' || c.status === 'IN_RITARDO';
+                if (activeFilter === 'ATTESA_2A') return c.status === 'ATTESA_2A';
+                if (activeFilter === 'PAGATO') return c.status === 'PAGATO';
+                if (activeFilter === 'OGNI_2') return c.frequency.includes('Ogni 2');
+                if (activeFilter === 'OGNI_4') return c.frequency.includes('Ogni 4') || c.frequency.includes('Mensile');
+
+                return true;
+            });
+
+            filtered.sort((a, b) => {
+                if (sortBy === 'name') return a.name.localeCompare(b.name);
+                if (sortBy === 'priceDesc') return b.price - a.price;
+                if (sortBy === 'priceAsc') return a.price - b.price;
+                if (sortBy === 'dateDesc') return (b.lastService || '').localeCompare(a.lastService || '');
+                if (sortBy === 'status') {
+                    const order = { 'DA_PAGARE': 1, 'IN_RITARDO': 2, 'ATTESA_2A': 3, 'PAGATO': 4 };
+                    return (order[a.status] || 5) - (order[b.status] || 5);
+                }
+                return 0;
+            });
+
+            calculateKpis();
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            let html = '';
+            filtered.forEach(client => {
+                let statusBadge = '';
+                let cardBorder = 'border-slate-200/80 hover:border-sky-300';
+
+                if (client.status === 'DA_PAGARE') {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 animate-pulse"><i class="fa-solid fa-triangle-exclamation mr-1"></i> DA INCASSARE (€${client.price})</span>`;
+                    cardBorder = 'border-amber-300 bg-amber-50/20 shadow-amber-100/50';
+                } else if (client.status === 'IN_RITARDO') {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-clock mr-1"></i> IN RITARDO</span>`;
+                    cardBorder = 'border-rose-300 bg-rose-50/20';
+                } else if (client.status === 'ATTESA_2A') {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200"><i class="fa-solid fa-hourglass-half mr-1"></i> 1ª FATTA - ATTESA 2ª</span>`;
+                    cardBorder = 'border-indigo-200 bg-indigo-50/10';
+                } else {
+                    statusBadge = `<span class="px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200"><i class="fa-solid fa-check mr-1"></i> PAGATO</span>`;
+                }
+
+                let is2ndWait = client.status === 'ATTESA_2A';
+                let isEvery2 = client.frequency.includes('Ogni 2');
+
+                let serviceBtnText = is2ndWait ? '+ 2ª Prestazione' : (isEvery2 ? '+ 1ª Prestazione' : '+ Intervento');
+                let serviceBtnColor = is2ndWait ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-sky-600 hover:bg-sky-700';
+
+                html += `
+                <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border ${cardBorder} transition hover:shadow-md flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-base leading-snug">${escapeHtml(client.name)}</h3>
+                                <p class="text-xs text-slate-500 font-medium flex items-center gap-1 mt-0.5">
+                                    <i class="fa-solid fa-repeat text-slate-400 text-[10px]"></i> ${escapeHtml(client.frequency)}
+                                </p>
+                            </div>
+                            <div class="text-right flex-shrink-0">
+                                <span class="text-lg font-extrabold text-slate-900">€${client.price}</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 flex items-center justify-between">
+                            ${statusBadge}
+                            <button onclick="sendWhatsApp(${client.id})" title="Invia promemoria WhatsApp" class="text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg text-xs font-medium transition flex items-center gap-1">
+                                <i class="fa-brands fa-whatsapp text-sm"></i> <span class="hidden sm:inline">WhatsApp</span>
+                            </button>
+                        </div>
+
+                        <div class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <span class="text-slate-400 block text-[10px] uppercase font-semibold">Ultimo Lavaggio</span>
+                                <span class="font-medium text-slate-700"><i class="fa-solid fa-calendar-day text-sky-500 mr-1"></i>${formatDate(client.lastService)}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block text-[10px] uppercase font-semibold">Ultimo Incasso</span>
+                                <span class="font-medium text-slate-700"><i class="fa-solid fa-money-bill-wave text-emerald-500 mr-1"></i>${formatDate(client.lastPayment)}</span>
+                            </div>
+                        </div>
+
+                        ${client.notes ? `
+                        <div class="mt-2 text-xs bg-amber-50/80 text-amber-800 p-2 rounded-xl border border-amber-200/60 font-medium flex items-start gap-1.5">
+                            <i class="fa-solid fa-note-sticky text-amber-500 mt-0.5"></i>
+                            <span>${escapeHtml(client.notes)}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="pt-2 flex items-center gap-2">
+                        <button onclick="registerIntervention(${client.id})" class="flex-1 ${serviceBtnColor} text-white font-medium text-xs py-2 px-3 rounded-xl transition shadow-sm active:scale-95 flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-spray-can"></i> ${serviceBtnText}
+                        </button>
+                        
+                        <button onclick="registerPayment(${client.id})" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs py-2 px-3 rounded-xl transition shadow-sm active:scale-95 flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-hand-holding-dollar"></i> Incassa
+                        </button>
+
+                        <button onclick="openEditModal(${client.id})" title="Modifica scheda" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </div>
+                </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+        }
+
+        function calculateKpis() {
+            let totalVal = 0;
+            let pendingVal = 0;
+            let paidVal = 0;
+            let pendingCount = 0;
+            let paidCount = 0;
+            let waitingCount = 0;
+
+            clients.forEach(c => {
+                totalVal += Number(c.price) || 0;
+                if (c.status === 'DA_PAGARE' || c.status === 'IN_RITARDO') {
+                    pendingVal += Number(c.price) || 0;
+                    pendingCount++;
+                } else if (c.status === 'PAGATO') {
+                    paidVal += Number(c.price) || 0;
+                    paidCount++;
+                } else if (c.status === 'ATTESA_2A') {
+                    waitingCount++;
+                }
+            });
+
+            document.getElementById('kpi-total-price').innerText = `€ ${totalVal}`;
+            document.getElementById('kpi-total-clients').innerText = `${clients.length} clienti registrati`;
+
+            document.getElementById('kpi-pending-amount').innerText = `€ ${pendingVal}`;
+            document.getElementById('kpi-pending-count').innerText = `${pendingCount} da incassare`;
+
+            document.getElementById('kpi-paid-amount').innerText = `€ ${paidVal}`;
+            document.getElementById('kpi-paid-count').innerText = `${paidCount} saldati`;
+
+            document.getElementById('kpi-waiting-count').innerText = `${waitingCount}`;
+        }
+
+        function updateFilterCounts() {
+            document.getElementById('cnt-ALL').innerText = clients.length;
+            document.getElementById('cnt-DA_PAGARE').innerText = clients.filter(c => c.status === 'DA_PAGARE' || c.status === 'IN_RITARDO').length;
+            document.getElementById('cnt-ATTESA_2A').innerText = clients.filter(c => c.status === 'ATTESA_2A').length;
+            document.getElementById('cnt-PAGATO').innerText = clients.filter(c => c.status === 'PAGATO').length;
+            document.getElementById('cnt-OGNI_2').innerText = clients.filter(c => c.frequency.includes('Ogni 2')).length;
+            document.getElementById('cnt-OGNI_4').innerText = clients.filter(c => c.frequency.includes('Ogni 4') || c.frequency.includes('Mensile')).length;
+        }
+
+        function setFilter(filterType) {
+            activeFilter = filterType;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.className = 'filter-btn px-3.5 py-1.5 rounded-xl font-medium transition whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200';
+            });
+            const activeBtn = document.getElementById(`filter-${filterType}`);
+            if (activeBtn) {
+                activeBtn.className = 'filter-btn active px-3.5 py-1.5 rounded-xl font-medium transition whitespace-nowrap bg-sky-600 text-white shadow-sm';
+            }
+            renderClients();
+        }
+
+        function handleSearch() {
+            renderClients();
+        }
+
+        function registerIntervention(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (!client) return;
+
+            const todayStr = getTodayISO();
+            client.lastService = todayStr;
+
+            if (client.frequency.includes('Ogni 2')) {
+                if (client.status === 'ATTESA_2A') {
+                    client.status = 'DA_PAGARE';
+                    showToast(`2ª prestazione fatta per <b>${escapeHtml(client.name)}</b>! Stato: <b>DA PAGARE</b> (€${client.price}).`, 'amber');
+                } else {
+                    client.status = 'ATTESA_2A';
+                    showToast(`1ª prestazione fatta per <b>${escapeHtml(client.name)}</b>. Attesa 2ª prestazione.`, 'info');
+                }
+            } else {
+                client.status = 'DA_PAGARE';
+                showToast(`Intervento registrato per <b>${escapeHtml(client.name)}</b>! In attesa di incasso.`, 'amber');
+            }
+
+            saveToLocalStorage();
+            syncClientToCloud(client);
+            renderClients();
+        }
+
+        function registerPayment(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (!client) return;
+
+            const todayStr = getTodayISO();
+            client.lastPayment = todayStr;
+            client.status = 'PAGATO';
+
+            saveToLocalStorage();
+            syncClientToCloud(client);
+            renderClients();
+            showToast(`Incasso di <b>€${client.price}</b> da <b>${escapeHtml(client.name)}</b> registrato!`, 'emerald');
+        }
+
+        function sendWhatsApp(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (!client) return;
+
+            let msg = `Ciao ${client.name}, ti contattiamo da VetriClean Pro per la pulizia delle vetrate. `;
+            if (client.status === 'DA_PAGARE' || client.status === 'IN_RITARDO') {
+                msg += `Ti ricordiamo che il totale da saldare è di €${client.price}. `;
+                if (client.notes) msg += `(${client.notes}) `;
+                msg += `Grazie e buona giornata!`;
+            } else {
+                msg += `L'ultimo intervento risulta registrato in data ${formatDate(client.lastService)}. Grazie!`;
+            }
+
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-shop text-sky-400"></i> Nuovo Cliente';
+            document.getElementById('clientId').value = '';
+            document.getElementById('clientName').value = '';
+            document.getElementById('clientPrice').value = '';
+            document.getElementById('clientFrequency').value = 'Ogni 2 prestazioni';
+            document.getElementById('clientStatus').value = 'PAGATO';
+            document.getElementById('clientLastService').value = getTodayISO();
+            document.getElementById('clientLastPayment').value = getTodayISO();
+            document.getElementById('clientNotes').value = '';
+            document.getElementById('deleteClientBtn').classList.add('hidden');
+
+            showModal('clientModal', 'modalContainer');
+        }
+
+        function openEditModal(clientId) {
+            const client = clients.find(c => c.id === clientId);
+            if (!client) return;
+
+            document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-sky-400"></i> Scheda Cliente';
+            document.getElementById('clientId').value = client.id;
+            document.getElementById('clientName').value = client.name || '';
+            document.getElementById('clientPrice').value = client.price || 0;
+            document.getElementById('clientFrequency').value = client.frequency || 'Ogni 2 prestazioni';
+            document.getElementById('clientStatus').value = client.status || 'PAGATO';
+            document.getElementById('clientLastService').value = client.lastService || '';
+            document.getElementById('clientLastPayment').value = client.lastPayment || '';
+            document.getElementById('clientNotes').value = client.notes || '';
+            document.getElementById('deleteClientBtn').classList.remove('hidden');
+
+            showModal('clientModal', 'modalContainer');
+        }
+
+        function showModal(modalId, containerId) {
+            const modal = document.getElementById(modalId);
+            const container = document.getElementById(containerId);
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                container.classList.remove('scale-95');
+                container.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeClientModal() {
+            const modal = document.getElementById('clientModal');
+            const container = document.getElementById('modalContainer');
+            modal.classList.add('opacity-0');
+            container.classList.remove('scale-100');
+            container.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function saveClient(event) {
+            event.preventDefault();
+            const idVal = document.getElementById('clientId').value;
+
+            const name = document.getElementById('clientName').value.trim();
+            const price = Number(document.getElementById('clientPrice').value);
+            const frequency = document.getElementById('clientFrequency').value;
+            const status = document.getElementById('clientStatus').value;
+            const lastService = document.getElementById('clientLastService').value;
+            const lastPayment = document.getElementById('clientLastPayment').value;
+            const notes = document.getElementById('clientNotes').value.trim();
+
+            let targetClient = null;
+
+            if (idVal) {
+                const index = clients.findIndex(c => c.id === Number(idVal));
+                if (index !== -1) {
+                    clients[index] = { ...clients[index], name, price, frequency, status, lastService, lastPayment, notes };
+                    targetClient = clients[index];
+                    showToast(`Scheda di <b>${escapeHtml(name)}</b> aggiornata!`, 'emerald');
+                }
+            } else {
+                const newId = clients.length ? Math.max(...clients.map(c => c.id)) + 1 : 1;
+                targetClient = { id: newId, name, price, frequency, status, lastService, lastPayment, notes };
+                clients.push(targetClient);
+                showToast(`Nuovo cliente <b>${escapeHtml(name)}</b> creato!`, 'emerald');
+            }
+
+            saveToLocalStorage();
+            if (targetClient) syncClientToCloud(targetClient);
+            closeClientModal();
+            renderClients();
+        }
+
+        function askDeleteConfirmation() {
+            const idVal = document.getElementById('clientId').value;
+            if (!idVal) return;
+            const client = clients.find(c => c.id === Number(idVal));
+            if (!client) return;
+
+            openConfirmModal({
+                title: 'Elimina Cliente',
+                message: `Vuoi eliminare definitivamente <b>${escapeHtml(client.name)}</b>?`,
+                actionText: 'Elimina',
+                onConfirm: async () => {
+                    clients = clients.filter(c => c.id !== Number(idVal));
+                    saveToLocalStorage();
+                    await removeClientFromCloud(Number(idVal));
+                    closeClientModal();
+                    renderClients();
+                    showToast(`Cliente <b>${escapeHtml(client.name)}</b> eliminato.`, 'rose');
+                }
+            });
+        }
+
+        function askResetConfirmation() {
+            openConfirmModal({
+                title: 'Ripristina Dati Iniziali',
+                message: 'Vuoi ripristinare i dati iniziali dal foglio Numbers? Tutte le modifiche recenti verranno ripristinate.',
+                actionText: 'Ripristina',
+                onConfirm: async () => {
+                    clients = JSON.parse(JSON.stringify(INITIAL_NUMBERS_DATA));
+                    saveToLocalStorage();
+                    for (const item of clients) {
+                        await syncClientToCloud(item);
+                    }
+                    renderClients();
+                    showToast("Dati originali ripristinati con successo!", "info");
+                }
+            });
+        }
+
+        function openConfirmModal({ title, message, actionText, onConfirm }) {
+            document.getElementById('confirmModalTitle').innerHTML = title;
+            document.getElementById('confirmModalText').innerHTML = message;
+            const btn = document.getElementById('confirmModalActionBtn');
+            btn.innerText = actionText;
+
+            pendingConfirmAction = onConfirm;
+
+            btn.onclick = () => {
+                if (pendingConfirmAction) pendingConfirmAction();
+                closeConfirmModal();
+            };
+
+            showModal('confirmModal', 'confirmModalContainer');
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            const container = document.getElementById('confirmModalContainer');
+            modal.classList.add('opacity-0');
+            container.classList.remove('scale-100');
+            container.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        async function exportData() {
+            let csvContent = "ID,Cliente,Prezzo,Frequenza,Ultima Prestazione,Ultimo Pagamento,Stato,Note\n";
+            clients.forEach(c => {
+                const row = [
+                    c.id,
+                    `"${(c.name || '').replace(/"/g, '""')}"`,
+                    c.price,
+                    `"${(c.frequency || '').replace(/"/g, '""')}"`,
+                    c.lastService || '',
+                    c.lastPayment || '',
+                    c.status,
+                    `"${(c.notes || '').replace(/"/g, '""')}"`
+                ].join(",");
+                csvContent += row + "\n";
+            });
+
+            if ('showSaveFilePicker' in window) {
+                try {
+                    if (!fileHandle) {
+                        fileHandle = await window.showSaveFilePicker({
+                            suggestedName: 'vetriclean_dati.csv',
+                            types: [{
+                                description: 'File CSV Data',
+                                accept: { 'text/csv': ['.csv'] },
+                            }],
+                        });
+                    }
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(csvContent);
+                    await writable.close();
+                    showToast("Dati salvati nello stesso file!", "emerald");
+                    return;
+                } catch (err) {
+                    if (err.name === 'AbortError') return;
+                }
+            }
+
+            const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "vetriclean_dati.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Backup CSV esportato con successo!", "emerald");
+        }
+
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('vetriclean_clients');
+            if (savedData) {
+                try {
+                    clients = JSON.parse(savedData);
+                } catch(e) {
+                    clients = [...INITIAL_NUMBERS_DATA];
+                }
+            } else {
+                clients = [...INITIAL_NUMBERS_DATA];
+                saveToLocalStorage();
+            }
+            renderClients();
+            return clients;
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('vetriclean_clients', JSON.stringify(clients));
+        }
+
+        async function initCloudSync() {
+            if (typeof __firebase_config === 'undefined' || !__firebase_config) {
+                updateCloudBadge('offline', 'Uso Locale (Offline)');
+                loadFromLocalStorage();
+                return;
+            }
+
+            try {
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                updateCloudBadge('syncing', 'Autenticazione...');
+
+                const customToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (customToken) {
+                    await signInWithCustomToken(auth, customToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                if (!auth.currentUser) {
+                    throw new Error("Autenticazione fallita");
+                }
+
+                updateCloudBadge('syncing', 'Sincronizzazione...');
+
+                const clientsCollRef = collection(db, 'artifacts', appId, 'public', 'data', 'clients');
+
+                onSnapshot(clientsCollRef, async (snapshot) => {
+                    if (snapshot.empty) {
+                        updateCloudBadge('syncing', 'Inizializzazione...');
+                        const initialData = loadFromLocalStorage();
+                        for (const item of initialData) {
+                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'clients', String(item.id)), item);
+                        }
+                    } else {
+                        const cloudClients = [];
+                        snapshot.forEach((docSnap) => {
+                            cloudClients.push(docSnap.data());
+                        });
+                        clients = cloudClients;
+                        saveToLocalStorage();
+                        renderClients();
+                    }
+                    isCloudActive = true;
+                    updateCloudBadge('online', 'Cloud Attivo');
+                }, (error) => {
+                    console.error("Firestore error:", error);
+                    updateCloudBadge('offline', 'Uso Locale (Offline)');
+                    loadFromLocalStorage();
+                });
+
+            } catch (err) {
+                console.error("Cloud connection failed:", err);
+                updateCloudBadge('offline', 'Uso Locale (Offline)');
+                loadFromLocalStorage();
+            }
+        }
+
+        function updateCloudBadge(state, labelText) {
+            const dot = document.getElementById('cloudDot');
+            const txt = document.getElementById('cloudStatusText');
+            if (!dot || !txt) return;
+
+            txt.innerText = labelText;
+
+            if (state === 'online') {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm';
+            } else if (state === 'syncing') {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping';
+            } else {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-slate-400';
+            }
+        }
+
+        async function syncClientToCloud(client) {
+            if (!isCloudActive || !db || !auth?.currentUser) return;
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'clients', String(client.id)), client);
+            } catch (err) {
+                console.error("Cloud save error:", err);
+            }
+        }
+
+        async function removeClientFromCloud(clientId) {
+            if (!isCloudActive || !db || !auth?.currentUser) return;
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'clients', String(clientId)));
+            } catch (err) {
+                console.error("Cloud delete error:", err);
+            }
+        }
+
+        // Global function exports for HTML events
+        window.setFilter = setFilter;
+        window.renderClients = renderClients;
+        window.registerIntervention = registerIntervention;
+        window.registerPayment = registerPayment;
+        window.sendWhatsApp = sendWhatsApp;
+        window.handleSearch = handleSearch;
+        window.openAddModal = openAddModal;
+        window.openEditModal = openEditModal;
+        window.closeClientModal = closeClientModal;
+        window.saveClient = saveClient;
+        window.askDeleteConfirmation = askDeleteConfirmation;
+        window.askResetConfirmation = askResetConfirmation;
+        window.closeConfirmModal = closeConfirmModal;
+        window.exportData = exportData;
+
+        // QUICK DAILY REGISTRATION LOGIC
+        function openQuickDailyModal() {
+            const select = document.getElementById('quickClientSelect');
+            select.innerHTML = '';
+
+            const sorted = [...clients].sort((a,b) => a.name.localeCompare(b.name));
+            
+            sorted.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = `${c.name} (€${c.price}) - [${c.status}]`;
+                select.appendChild(opt);
+            });
+
+            document.getElementById('quickDate').value = getTodayISO();
+            document.getElementById('quickWorkDone').checked = true;
+            document.getElementById('quickPaid').checked = true;
+            document.getElementById('quickNotes').value = '';
+
+            if (sorted.length > 0) {
+                select.value = sorted[0].id;
+                onQuickClientChange();
+            }
+
+            renderBatchList();
+            switchQuickTab('single');
+            showModal('quickDailyModal', 'quickModalContainer');
+        }
+
+        function closeQuickDailyModal() {
+            const modal = document.getElementById('quickDailyModal');
+            const container = document.getElementById('quickModalContainer');
+            modal.classList.add('opacity-0');
+            container.classList.remove('scale-100');
+            container.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function onQuickClientChange() {
+            const select = document.getElementById('quickClientSelect');
+            const clientId = Number(select.value);
+            const client = clients.find(c => c.id === clientId);
+            if (client) {
+                document.getElementById('quickPrice').value = client.price || 0;
+            }
+        }
+
+        function switchQuickTab(tab) {
+            const singleBtn = document.getElementById('quickTabSingleBtn');
+            const batchBtn = document.getElementById('quickTabBatchBtn');
+            const singleForm = document.getElementById('quickSingleForm');
+            const batchSec = document.getElementById('quickBatchSection');
+
+            if (tab === 'single') {
+                singleBtn.className = "flex-1 py-2 text-xs font-bold rounded-xl bg-white text-slate-800 shadow-sm transition flex items-center justify-center gap-1.5";
+                batchBtn.className = "flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-800 transition flex items-center justify-center gap-1.5";
+                singleForm.classList.remove('hidden');
+                batchSec.classList.add('hidden');
+            } else {
+                batchBtn.className = "flex-1 py-2 text-xs font-bold rounded-xl bg-white text-slate-800 shadow-sm transition flex items-center justify-center gap-1.5";
+                singleBtn.className = "flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-800 transition flex items-center justify-center gap-1.5";
+                singleForm.classList.add('hidden');
+                batchSec.classList.remove('hidden');
+            }
+        }
+
+        function saveQuickDaily(e) {
+            e.preventDefault();
+            const clientId = Number(document.getElementById('quickClientSelect').value);
+            const client = clients.find(c => c.id === clientId);
+            if (!client) return;
+
+            const isWorkDone = document.getElementById('quickWorkDone').checked;
+            const isPaid = document.getElementById('quickPaid').checked;
+            const customDate = document.getElementById('quickDate').value || getTodayISO();
+            const customPrice = Number(document.getElementById('quickPrice').value);
+            const customNotes = document.getElementById('quickNotes').value.trim();
+
+            if (!isWorkDone && !isPaid) {
+                showToast("Seleziona almeno 'Lavaggio eseguito' o 'Pagamento incassato'.", "amber");
+                return;
+            }
+
+            if (customPrice > 0) client.price = customPrice;
+            if (customNotes) client.notes = customNotes;
+
+            if (isWorkDone) {
+                client.lastService = customDate;
+                if (client.frequency.includes('Ogni 2')) {
+                    client.status = (client.status === 'ATTESA_2A') ? 'DA_PAGARE' : 'ATTESA_2A';
+                } else {
+                    client.status = 'DA_PAGARE';
+                }
+            }
+
+            if (isPaid) {
+                client.lastPayment = customDate;
+                client.status = 'PAGATO';
+            }
+
+            saveToLocalStorage();
+            syncClientToCloud(client);
+            closeQuickDailyModal();
+            renderClients();
+            showToast(`Registrato per <b>${escapeHtml(client.name)}</b>!`, 'emerald');
+        }
+
+        function renderBatchList() {
+            const container = document.getElementById('batchClientsList');
+            const sorted = [...clients].sort((a,b) => a.name.localeCompare(b.name));
+
+            let html = '';
+            sorted.forEach(c => {
+                html += `
+                <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200 hover:bg-white transition">
+                    <div class="flex-1 pr-2">
+                        <span class="font-bold text-xs text-slate-800 block">${escapeHtml(c.name)}</span>
+                        <span class="text-[10px] text-slate-500">€${c.price} • ${c.frequency}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-1 cursor-pointer bg-sky-50 px-2 py-1 rounded-lg border border-sky-200 text-[11px] font-semibold text-sky-800">
+                            <input type="checkbox" data-batch-work="${c.id}" class="w-3.5 h-3.5 text-sky-600 rounded">
+                            <span>Lavato</span>
+                        </label>
+                        <label class="flex items-center gap-1 cursor-pointer bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200 text-[11px] font-semibold text-emerald-800">
+                            <input type="checkbox" data-batch-pay="${c.id}" class="w-3.5 h-3.5 text-emerald-600 rounded">
+                            <span>Incassato</span>
+                        </label>
+                    </div>
+                </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function applyBatchQuickDaily() {
+            const todayStr = getTodayISO();
+            let updatedCount = 0;
+
+            clients.forEach(c => {
+                const workCb = document.querySelector(`[data-batch-work="${c.id}"]`);
+                const payCb = document.querySelector(`[data-batch-pay="${c.id}"]`);
+
+                const workDone = workCb && workCb.checked;
+                const paidDone = payCb && payCb.checked;
+
+                if (workDone || paidDone) {
+                    updatedCount++;
+                    if (workDone) {
+                        c.lastService = todayStr;
+                        if (c.frequency.includes('Ogni 2')) {
+                            c.status = (c.status === 'ATTESA_2A') ? 'DA_PAGARE' : 'ATTESA_2A';
+                        } else {
+                            c.status = 'DA_PAGARE';
+                        }
+                    }
+                    if (paidDone) {
+                        c.lastPayment = todayStr;
+                        c.status = 'PAGATO';
+                    }
+                    syncClientToCloud(c);
+                }
+            });
+
+            if (updatedCount > 0) {
+                saveToLocalStorage();
+                renderClients();
+                closeQuickDailyModal();
+                showToast(`Aggiornati <b>${updatedCount}</b> clienti registrati oggi!`, 'emerald');
+            } else {
+                showToast("Nessuna spunta selezionata.", "amber");
+            }
+        }
+
+        window.openQuickDailyModal = openQuickDailyModal;
+        window.closeQuickDailyModal = closeQuickDailyModal;
+        window.onQuickClientChange = onQuickClientChange;
+        window.switchQuickTab = switchQuickTab;
+        window.saveQuickDaily = saveQuickDaily;
+        window.applyBatchQuickDaily = applyBatchQuickDaily;
+
+        // Init Cloud / Local
+        initCloudSync();
+    </script>
+</body>
+</html>
